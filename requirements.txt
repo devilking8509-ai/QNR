@@ -3,3 +3,4 @@ pycryptodome
 requests
 protobuf
 PyJWT
+psutil

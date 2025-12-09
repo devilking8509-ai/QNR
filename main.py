@@ -232,23 +232,41 @@ def get_random_avatar():
 
 class FF_CLIENT(threading.Thread):
     def __init__(self, id, password):
+        super().__init__()  # यह लाइन ज़रूरी है क्योंकि हम threading use कर रहे हैं
         self.id = id
         self.password = password
         self.key = None
         self.iv = None
+        self.sock = None  # हर बॉट के लिए अपना सॉकेट वेरिएबल
         self.get_tok()
-    def connect(self, tok, host, port, packet, key, iv):
-        global clients
-        clients = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        port = int(port)
-        clients.connect((host, port))
-        clients.send(bytes.fromhex(tok))
 
-        while True:
-            data = clients.recv(9999)
-            if data == b"":
-                print("Connection closed by remote host")
-                break
+    def connect(self, tok, host, port, packet, key, iv):
+        try:
+            # global clients  <-- इसे हटा दिया गया है
+            # अब हम self.sock का इस्तेमाल करेंगे
+            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            port = int(port)
+            self.sock.connect((host, port))
+            
+            # Token भेजना
+            self.sock.send(bytes.fromhex(tok))
+            print(f"[Bot {self.id}] Connected to {host}:{port}")
+
+            while True:
+                # Data receive करना
+                data = self.sock.recv(9999)
+                if data == b"":
+                    print(f"[Bot {self.id}] Connection closed by remote host")
+                    break
+                
+                # नोट: यहाँ नीचे आपको वो लॉजिक डालना होगा जो 'data' के साथ करना है
+                # (जैसे आपने पहले लिखा था: if "0500" in data.hex()...)
+                # लेकिन याद रखें: जहाँ भी 'self.sock.send' था, उसे 'self.sock.send' कर दें।
+
+        except Exception as e:
+            print(f"[Bot {self.id}] Connection Error: {e}")
+
+# यह फंक्शन क्लास के बाहर ही रहेगा, इसमें कोई बदलाव नहीं है
 def get_available_room(input_text):
     try:
         parsed_results = Parser().parse(input_text)
@@ -259,7 +277,6 @@ def get_available_room(input_text):
     except Exception as e:
         print(f"error {e}")
         return None
-
 def parse_results(parsed_results):
     result_dict = {}
     for result in parsed_results:
@@ -871,7 +888,7 @@ class FF_CLIENT(threading.Thread):
         socket_client.connect((online_ip,online_port))
         print(f" Con port {online_port} Host {online_ip} ")
         print(tok)
-        socket_client.send(bytes.fromhex(tok))
+        self.sock.send(bytes.fromhex(tok))
         while True:
             data2 = socket_client.recv(9999)
             print(data2)
@@ -892,10 +909,10 @@ class FF_CLIENT(threading.Thread):
                             print(ownerid)
                             print(aa)
                             ss = self.accept_sq(aa, tempid, int(ownerid))
-                            socket_client.send(ss)
+                            self.sock.send(ss)
                             sleep(1)
                             startauto = self.start_autooo()
-                            socket_client.send(startauto)
+                            self.sock.send(startauto)
                             start_par = False
                             sent_inv = False
                     if fark == 6:
@@ -996,7 +1013,7 @@ class FF_CLIENT(threading.Thread):
         global data22
         clients = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         clients.connect((whisper_ip, whisper_port))
-        clients.send(bytes.fromhex(tok))
+        self.sock.send(bytes.fromhex(tok))
         thread = threading.Thread(
             target=self.sockf1, args=(tok, online_ip, online_port, "anything", key, iv)
         )
@@ -1029,7 +1046,7 @@ class FF_CLIENT(threading.Thread):
                         
                         # Check accounts in Clan
                         if not player_id.isdigit():
-                            clients.send(
+                            self.sock.send(
                                 self.GenResponsMsg(
                                     f"[C][B][FF0000]Enter /glori [uid_clan] 15", uid
                                 )
@@ -1038,7 +1055,7 @@ class FF_CLIENT(threading.Thread):
                         
                         print(f"The process of collecting glory has started successfully.: {uid_clan}")
                         
-                        clients.send(
+                        self.sock.send(
                             self.GenResponsMsg(
                                 f"[C][B][1E90FF]🚀 After I helped, I went in and saw the clan.\n" +
                                 f"🎯 The identifier: {fix_num(uid_clan)}\n" +
@@ -1051,10 +1068,10 @@ class FF_CLIENT(threading.Thread):
                             try:
                                 for i in range(50):  # Send 8000 requests
                                     invskwad = self.request_skwad(player_id)
-                                    socket_client.send(invskwad)
+                                    self.sock.send(invskwad)
                                     time.sleep(0.1)
                                     if (i + 1) % 10 == 0:
-                                        clients.send(
+                                        self.sock.send(
                                             self.GenResponsMsg(
                                                 f"[C][B][00FF00]✅ Sent {i + 1} Request from origin 80000", uid
                                             )
@@ -1062,7 +1079,7 @@ class FF_CLIENT(threading.Thread):
                                 print(f"The process of collecting glory has started successfully: {player_id}")
                             except Exception as e:
                                 print(f"Error sending join requests: {e}")
-                                clients.send(
+                                self.sock.send(
                                     self.GenResponsMsg(
                                         f"[C][B][FF0000]❌ An error occurred while sending.", uid
                                     )
@@ -1283,12 +1300,12 @@ threads = []
     
 if __name__ == "__main__":
     try:
-        client_thread = FF_CLIENT(id="4211697689", password="C24D431F1FB8CA013D7D803F4E3B481C7FD7975C366BCD96E90FE13FB07648F5")
+        client_thread = FF_CLIENT(id="4330909008", password="5BAE6FA6CBF4AF36BEBE2786502FE101BC061819DA888F78EAB418FBA3E7B65F")
         client_thread.start()
     except Exception as e:
         logging.error(f"Error occurred: {e}")
 
-        client_thread = FF_CLIENT(id="4211706224", password="AEEF9ED92F961999EED720FD88754329F07B9C471E01A940447D8AFD87D2D956")
+        client_thread = FF_CLIENT(id="4303131007", password="E9ADF3DD3230DDB603F54B7FEB89E0512CB89175A67D040C6ECB3D68BFA34725")
         client_thread.start()
     except Exception as e:
         logging.error(f"Error occurred: {e}")
