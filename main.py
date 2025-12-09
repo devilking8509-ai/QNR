@@ -5,7 +5,24 @@ from threading import Thread
 import json
 import requests 
 import google.protobuf
-from protobuf_decoder import Parser
+# --- Is code ko imports ke shuruaat mein paste karein ---
+import sys
+import os
+
+# Raasta (path) set kar rahe hain taaki python files dhundh sake
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+try:
+    # Koshish 1: Agar file seedha bahar rakhi hai
+    from protobuf_decoder import Parser
+except ImportError:
+    try:
+        # Koshish 2: Agar file 'protobuf_decoder' folder ke andar hai
+        from protobuf_decoder.protobuf_decoder import Parser
+    except ImportError:
+        print("\n!!! ERROR: protobuf_decoder.py file nahi mil rahi hai. !!!\n")
+        raise
+# -------------------------------------------------------
 import json
 import datetime
 import datetime
