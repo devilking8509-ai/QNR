@@ -5,7 +5,7 @@ from threading import Thread
 import json
 import requests 
 import google.protobuf
-from protobuf_decoder.protobuf_decoder import Parser
+from protobuf_decoder import Parser
 import json
 import datetime
 import datetime
@@ -1314,44 +1314,55 @@ def home():
 def health():
     return "OK", 200
 
+# --- Is code ko file ke sabse end mein replace karein ---
+
 def start_all_bots():
-    # Aapki purani file se saari IDs yahan daal di hain
+    # Aapki IDs ki list
     accounts = [
+        # Asli IDs
         ("4330909008", "5BAE6FA6CBF4AF36BEBE2786502FE101BC061819DA888F78EAB418FBA3E7B65F"),
         ("4303131007", "E9ADF3DD3230DDB603F54B7FEB89E0512CB89175A67D040C6ECB3D68BFA34725"),
-        ("46156555118", "2EAE76C71AC4A70E9388C905B23D5EB24C483366E46156555118D779343D9C63"),
-        ("4211723932", "F721CFEB4CC4CF0F939974E5EF3FDA051AA8EFA33199B0C6CF17F64D2BC6276A"),
-        ("4211734018", "5F8C8F60DE743B22071210948607B147D6B72BAE2E1CA104115FF0280C9B75CE"),
-        ("4207731065", "8A3936D3DB6A0A5F6DCEA877673608BAA6089C882A28C5402D17E13975D1468B"),
-        ("4207731255", "20182E20833D3DAFC10AF7F20BB13924CC49DE3106816717A9B42C23AAC09120"),
-        ("4207731359", "F2B4B45AE597B04C46E070625E02906374ABF3F3B05598DC085FB33D94805DD2"),
-        ("4207731636", "3B678572EBDFA59DB8B1B91A0900DE0625F925D7ACA72C14C306A3165C7DD34F"),
-        ("4207731802", "496AE1A966DB31A5CFEEA934A0392A363526662BC6229E478870E9CB7580956B"),
-        ("4207731990", "2C033BD76F0185327262C42104F424AA4FC04EA4EF285C7C19434598888B25B5"),
-        ("4207733005", "2FA2D07D9876317CAA3812393DDD84AAE6A63C9E26FD665F500DD9715284502E"),
-        ("4207733298", "857798E6CA89018BFFF47E550A5AC0F17A6001718A88E2979CA6E973342F6486"),
-        ("4207733507", "CC1545CA024293484DB237FFF5B445E1DF5313FD4D4836AD74A47788A07B8479"),
-        ("4207734841", "FA3429B350A33942E04897D5562CBE14B680E5055A885972D61D83C08CD0F600")
+        
+        # Future ke liye Placeholders
+        ("NEW_UID_HERE", "NEW_PASSWORD_HERE"),
+        ("NEW_UID_HERE", "NEW_PASSWORD_HERE"),
+        ("NEW_UID_HERE", "NEW_PASSWORD_HERE"),
+        ("NEW_UID_HERE", "NEW_PASSWORD_HERE"),
+        ("NEW_UID_HERE", "NEW_PASSWORD_HERE"),
+        ("NEW_UID_HERE", "NEW_PASSWORD_HERE"),
+        ("NEW_UID_HERE", "NEW_PASSWORD_HERE"),
+        ("NEW_UID_HERE", "NEW_PASSWORD_HERE"),
+        ("NEW_UID_HERE", "NEW_PASSWORD_HERE"),
+        ("NEW_UID_HERE", "NEW_PASSWORD_HERE"),
+        ("NEW_UID_HERE", "NEW_PASSWORD_HERE"),
+        ("NEW_UID_HERE", "NEW_PASSWORD_HERE"),
+        ("NEW_UID_HERE", "NEW_PASSWORD_HERE")
     ]
 
     print(f"--- Starting {len(accounts)} Bots ---")
 
     for uid, pwd in accounts:
+        # ✅ YEH LOGIC HAI: Agar 'NEW_UID' likha hai toh skip karo, error mat do
+        if "NEW_UID" in uid or len(uid) < 5:
+            print(f"⚠️ Slot reserved for future ID. Skipping...")
+            continue 
+
         try:
             print(f"[Init] Starting Bot ID: {uid}...")
             client_thread = FF_CLIENT(id=uid, password=pwd)
+            client_thread.daemon = True
             client_thread.start()
-            time.sleep(2) # Safe delay
+            time.sleep(2) 
         except Exception as e:
             logging.error(f"[Fail] Bot {uid} failed: {e}")
 
-if __name__ == "__main__":
-    # 1. Start Bots
+# ✅ Gunicorn Fix: Yeh line bots ko server start hote hi chala degi
+if os.environ.get("WERKZEUG_RUN_MAIN") != "true":
     bot_loader = threading.Thread(target=start_all_bots)
     bot_loader.daemon = True
     bot_loader.start()
 
-    # 2. Start Web Server
+if __name__ == "__main__":
     try:
         port = int(os.environ.get("PORT", 5000))
         app.run(host='0.0.0.0', port=port)
